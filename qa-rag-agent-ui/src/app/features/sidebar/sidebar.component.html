@@ -1,0 +1,99 @@
+<aside class="sidebar" [class.collapsed]="isCollapsed">
+  <div class="sidebar-header">
+    @if (!isCollapsed) {
+      <h2>🤖 QA RAG Agent</h2>
+    }
+    <button class="collapse-btn" (click)="toggleSidebar()" [attr.title]="isCollapsed ? 'Expand' : 'Collapse'">
+      {{ isCollapsed ? '☰' : '✕' }}
+    </button>
+  </div>
+
+  @if (!isCollapsed) {
+    <!-- Health Status -->
+    <div class="section">
+      <h3>📊 Status</h3>
+      @if (health) {
+        <div class="status-grid">
+          <span class="status-dot online"></span>
+          <span>API v{{ health.version }}</span>
+          <span class="status-dot" [class.online]="health.rag_ready"></span>
+          <span>RAG {{ health.rag_ready ? 'Ready' : 'No docs' }}</span>
+          <span class="status-dot" [class.online]="health.web_search_ready"></span>
+          <span>Tools {{ health.web_search_ready ? 'Ready' : 'No key' }}</span>
+        </div>
+      } @else {
+        <p class="muted">Connecting...</p>
+      }
+    </div>
+
+    <!-- Settings -->
+    <div class="section">
+      <h3>🔀 Answer Mode</h3>
+      <label class="toggle">
+        <input type="checkbox" [(ngModel)]="ragEnabled" (change)="onSettingsChange()" id="rag-toggle" />
+        <span class="toggle-label">📚 RAG</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" [(ngModel)]="toolsEnabled" (change)="onSettingsChange()" id="tools-toggle" />
+        <span class="toggle-label">🛠️ Use Tools</span>
+      </label>
+    </div>
+
+    <!-- LLM Model -->
+    <div class="section">
+      <h3>🤖 Model</h3>
+      <select [(ngModel)]="selectedModel" class="model-select" id="model-select">
+        @for (model of modelOptions; track model.value) {
+          <option [value]="model.value">{{ model.label }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- File Upload -->
+    <div class="section">
+      <h3>📥 Upload Documents</h3>
+      <label class="file-input-label" for="file-upload">
+        Choose Files
+      </label>
+      <input
+        type="file"
+        id="file-upload"
+        multiple
+        accept=".txt,.md,.pdf,.docx"
+        (change)="onFileSelected($event)"
+        hidden
+      />
+      @if (selectedFiles.length > 0) {
+        <p class="file-count">{{ selectedFiles.length }} file(s) selected</p>
+        <button class="upload-btn" (click)="uploadFiles()" [disabled]="isUploading">
+          {{ isUploading ? 'Uploading...' : '⬆️ Upload' }}
+        </button>
+      }
+      @if (uploadStatus) {
+        <p class="upload-status">{{ uploadStatus }}</p>
+      }
+      @if (health?.rag_ready) {
+        <button class="clear-index-btn" (click)="clearIndex()">🗑️ Clear Index</button>
+      }
+    </div>
+
+    <!-- Sessions -->
+    <div class="section">
+      <div class="section-header">
+        <h3>💬 Sessions</h3>
+        <button class="new-chat-btn" (click)="onNewChat()">+ New</button>
+      </div>
+      <div class="sessions-list">
+        @for (session of sessions; track session.id) {
+          <div class="session-item" (click)="selectSession(session.id)">
+            <span class="session-title">{{ session.title || 'Untitled' }}</span>
+            <button class="delete-btn" (click)="deleteSession(session.id, $event)">×</button>
+          </div>
+        }
+        @if (sessions.length === 0) {
+          <p class="muted">No sessions yet</p>
+        }
+      </div>
+    </div>
+  }
+</aside>

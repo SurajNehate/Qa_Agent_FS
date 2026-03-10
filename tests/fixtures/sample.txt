@@ -1,0 +1,14 @@
+LangGraph is a library for building stateful, multi-actor applications with LLMs.
+It is used to create agent and multi-agent workflows.
+LangGraph is built on top of LangChain and extends its capabilities.
+
+Key features of LangGraph include:
+- Cycles and branching: Implement loops and conditionals in your apps.
+- Persistence: Automatically save state after each step in the graph.
+- Human-in-the-loop: Interrupt graph execution to approve or edit next action.
+- Streaming support: Stream outputs as they are produced by each node.
+- Integration with LangChain: Seamlessly works with LangChain and LangSmith.
+
+LangGraph was designed to address common challenges when building complex AI applications.
+It provides a clear way to define control flow and data flow in agentic applications.
+The library uses a graph-based approach where nodes represent actions and edges represent transitions.

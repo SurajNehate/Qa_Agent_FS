@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "qa_rag_agent": "./src/core/graph.py:create_graph"
+  },
+  "env": ".env"
+}

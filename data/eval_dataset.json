@@ -1,0 +1,27 @@
+[
+    {
+        "question": "What is LangGraph and how does it work?",
+        "expected_keywords": ["LangGraph", "graph", "state"],
+        "category": "factual"
+    },
+    {
+        "question": "How does the agent handle questions when no documents are found?",
+        "expected_keywords": ["fallback", "general knowledge"],
+        "category": "architecture"
+    },
+    {
+        "question": "What vector database is used for storing embeddings?",
+        "expected_keywords": ["ChromaDB", "Chroma", "vector"],
+        "category": "factual"
+    },
+    {
+        "question": "Explain the difference between RAG and web search modes.",
+        "expected_keywords": ["RAG", "web search", "retrieval"],
+        "category": "comparison"
+    },
+    {
+        "question": "What LLM providers are supported by the system?",
+        "expected_keywords": ["OpenAI", "Groq", "Ollama"],
+        "category": "factual"
+    }
+]

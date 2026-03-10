@@ -1,0 +1,25 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# ChromaDB persistent storage
+data/chroma_db/
+
+# Streamlit cache
+.streamlit/
+
+# Prompts
+docs/Prompts/
+
+# UI
+qa-rag-agent-ui/node_modules/
+qa-rag-agent-ui/dist/
+qa-rag-agent-ui/.angular/

@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  # Streamlit UI — development and demo interface
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - chroma_data:/app/data/chroma_db
+      - memory_data:/app/data
+    restart: unless-stopped
+
+  # FastAPI REST API — production interface for external consumers
+  api:
+    build: .
+    command: ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - chroma_data:/app/data/chroma_db
+      - memory_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: local Ollama for self-hosted LLM (no API key needed)
+  # Start with: docker compose --profile ollama up -d
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    profiles:
+      - ollama
+
+volumes:
+  chroma_data:
+  memory_data:
+  ollama_models:
