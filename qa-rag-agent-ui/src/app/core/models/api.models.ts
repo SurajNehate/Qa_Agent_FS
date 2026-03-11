@@ -25,6 +25,7 @@ export interface AskResponse {
   answer: string;
   citations: Citation[];
   source_type: 'rag' | 'web' | 'direct' | 'fallback';
+  model?: string;
   used_fallback: boolean;
   session_id?: string;
   error?: string;
@@ -54,6 +55,7 @@ export interface ChatMessage {
   renderedHtml?: any; // SafeHtml from DomSanitizer
   citations?: Citation[];
   source_type?: string;
+  model?: string;
   timestamp: Date;
   isStreaming?: boolean;
 }

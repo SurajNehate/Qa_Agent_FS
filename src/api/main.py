@@ -223,6 +223,7 @@ async def ask(req: AskRequest):
         answer=answer,
         citations=result.get("citations", []),
         source_type=result.get("source_type", "direct"),
+        model=req.model,
         used_fallback=result.get("used_fallback", False),
         session_id=session_id,
         error=result.get("error"),
@@ -293,6 +294,7 @@ async def ask_stream(req: AskRequest):
         meta = json.dumps({
             "citations": citations,
             "source_type": source_type,
+            "model": req.model,
             "used_fallback": used_fallback,
             "session_id": session_id,
         })

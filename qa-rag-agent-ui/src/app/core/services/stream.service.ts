@@ -8,6 +8,7 @@ export interface StreamEvent {
   token?: string;
   citations?: Citation[];
   source_type?: string;
+  model?: string;
   used_fallback?: boolean;
   session_id?: string;
 }
@@ -67,6 +68,7 @@ export class StreamService {
                         type: 'meta',
                         citations: meta.citations,
                         source_type: meta.source_type,
+                        model: meta.model,
                         used_fallback: meta.used_fallback,
                         session_id: meta.session_id,
                       }));

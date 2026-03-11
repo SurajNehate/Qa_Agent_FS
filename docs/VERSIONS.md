@@ -129,7 +129,7 @@ flowchart LR
 - File upload for document ingestion
 - Session management (list, switch, delete)
 - Dark mode premium design
-- Netlify deployment with proxy redirects
+- Netlify deployment with direct Modal API connection (bypassing proxies)
 - Full feature parity with Streamlit (production-grade)
 
 ## Deferred Items (Not a Version)

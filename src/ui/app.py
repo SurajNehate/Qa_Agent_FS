@@ -360,12 +360,18 @@ if user_input:
 
     # ── Source indicator ──
     source = st.session_state.last_source_type
-    if source == "rag":
-        st.success("📚 Source: Indexed Documents (RAG)")
-    elif source == "web":
-        st.info("🌐 Source: Web Search (Tavily)")
-    elif source == "direct":
-        st.warning("💡 Source: LLM General Knowledge (no documents/web)")
+    model_used = st.session_state.get("llm_model", "unknown")
+    
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if source == "rag":
+            st.success("📚 Source: Indexed Documents (RAG)")
+        elif source == "web":
+            st.info("🌐 Source: Web Search (Tavily)")
+        elif source == "direct":
+            st.warning("💡 Source: General Knowledge")
+    with col2:
+        st.caption(f"🤖 Model: `{model_used}`")
 
     # ── Citations ──
     if st.session_state.last_citations:

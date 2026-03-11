@@ -189,6 +189,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.scrollToBottom();
         } else if (event.type === 'meta') {
           assistantMsg.source_type = event.source_type;
+          assistantMsg.model = event.model;
           assistantMsg.citations = event.citations;
           if (event.session_id && !this.sessionId) {
             this.sessionId = event.session_id;
@@ -227,6 +228,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           renderedHtml: this.parseMarkdown(res.answer),
           citations: res.citations,
           source_type: res.source_type,
+          model: res.model,
           timestamp: new Date(),
         });
         this.isLoading = false;

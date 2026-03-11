@@ -26,6 +26,9 @@
             <span class="source-badge" [attr.data-type]="msg.source_type">
               {{ getSourceBadge(msg.source_type) }}
             </span>
+            <span class="source-badge" style="background-color: var(--surface-hover); color: var(--text-secondary); margin-left: 0.5rem; border: 1px solid var(--border-color);">
+              🤖 {{ msg.model || 'unknown' }}
+            </span>
           }
 
           @if (msg.citations && msg.citations.length > 0) {

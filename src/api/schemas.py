@@ -45,6 +45,7 @@ class AskResponse(BaseModel):
     answer: str = Field(..., description="Generated answer")
     citations: list[dict] = Field(default_factory=list, description="Source citations")
     source_type: str = Field("direct", description="Answer source: rag | web | fallback | direct")
+    model: str = Field("unknown", description="The LLM model used for the answer")
     used_fallback: bool = Field(False, description="Whether the answer used fallback mode")
     session_id: str | None = Field(None, description="Session ID for this conversation")
     error: str | None = Field(None, description="Error message if something went wrong")
