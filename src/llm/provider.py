@@ -27,7 +27,7 @@ class LLMConfig(BaseModel):
 
 # Default model suggestions per provider (for UI dropdowns)
 PROVIDER_MODELS: dict[str, list[str]] = {
-    "openai": ["gpt-5-nano", "gpt-4.1-nano"],
+    "openai": ["gpt-4.1-nano", "gpt-5-nano", "gpt-5.4"],
     "groq": ["openai/gpt-oss-120b", "llama-3.1-8b-instant"],
     "ollama": ["llama3.1:8b", "mistral:7b", "phi3.5:3.8b"],
 }
