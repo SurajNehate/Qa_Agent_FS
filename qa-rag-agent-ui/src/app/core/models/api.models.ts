@@ -51,6 +51,7 @@ export interface SessionResponse {
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  renderedHtml?: any; // SafeHtml from DomSanitizer
   citations?: Citation[];
   source_type?: string;
   timestamp: Date;

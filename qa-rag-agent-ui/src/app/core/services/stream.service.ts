@@ -76,8 +76,14 @@ export class StreamService {
                     continue;
                   }
 
-                  // Regular token
-                  this.ngZone.run(() => observer.next({ type: 'token', token: data }));
+                  // Regular token (JSON encoded from backend to preserve newlines)
+                  try {
+                    const parsedToken = JSON.parse(data);
+                    this.ngZone.run(() => observer.next({ type: 'token', token: parsedToken }));
+                  } catch {
+                    // Fallback for older backend versions
+                    this.ngZone.run(() => observer.next({ type: 'token', token: data }));
+                  }
                 }
               }
               read();

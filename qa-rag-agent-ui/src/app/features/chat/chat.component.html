@@ -1,7 +1,7 @@
 <div class="chat-wrapper">
   <!-- Messages area -->
   <div class="chat-messages" #chatContainer>
-    @for (msg of messages; track msg.timestamp) {
+    @for (msg of messages; track $index) {
       <div
         class="message"
         [class.user]="msg.role === 'user'"
@@ -11,12 +11,11 @@
           {{ msg.role === 'user' ? '👤' : '🤖' }}
         </div>
         <div class="message-body">
+          <!-- User messages: plain text. Assistant messages: markdown rendered -->
           @if (msg.role === 'user') {
             <div class="message-content">{{ msg.content }}</div>
-          } @else if (msg.isStreaming) {
-            <div class="message-content">{{ msg.content }}</div>
           } @else {
-            <div class="message-content markdown-body" [innerHTML]="msg.content | markdown"></div>
+            <div class="message-content markdown-body" [innerHTML]="msg.renderedHtml || msg.content"></div>
           }
 
           @if (msg.isStreaming) {

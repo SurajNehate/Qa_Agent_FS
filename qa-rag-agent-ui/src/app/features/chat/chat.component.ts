@@ -1,16 +1,33 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  ChangeDetectorRef,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
+import { marked } from 'marked';
 import { ApiService } from '../../core/services/api.service';
 import { StreamService } from '../../core/services/stream.service';
-import { ChatMessage, AskRequest, Citation } from '../../core/models/api.models';
-import { MarkdownPipe } from '../../shared/pipes/markdown.pipe';
+import { ChatMessage, AskRequest } from '../../core/models/api.models';
 
+/**
+ * Chat component — handles message display, user input, and streaming.
+ *
+ * Markdown is parsed directly in the component logic. This provides
+ * robust, bulletproof rendering during streaming updates, avoiding
+ * Angular Change Detection caveats with pipes in @for loops.
+ */
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MarkdownPipe],
+  imports: [CommonModule, FormsModule],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
 })
@@ -26,15 +43,18 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   @Output() sessionCreated = new EventEmitter<void>();
 
-  private streamSub?: Subscription;
-
   @ViewChild('chatContainer') chatContainer!: ElementRef;
+
+  private streamSub?: Subscription;
 
   constructor(
     private apiService: ApiService,
     private streamService: StreamService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer,
+  ) {
+    marked.setOptions({ breaks: true, gfm: true });
+  }
 
   ngOnInit(): void {
     this.addWelcomeMessage();
@@ -44,11 +64,12 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.streamSub?.unsubscribe();
   }
 
+  // ── Public API (called from parent / template) ───────────────
+
   sendMessage(): void {
     const question = this.inputText.trim();
     if (!question || this.isLoading) return;
 
-    // Add user message
     this.messages.push({
       role: 'user',
       content: question,
@@ -82,16 +103,22 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   clearChat(): void {
     this.messages = [];
+    this.sessionId = undefined;
     this.addWelcomeMessage();
   }
 
   getSourceBadge(sourceType?: string): string {
     switch (sourceType) {
-      case 'rag': return '📚 RAG';
-      case 'web': return '🌐 Web';
-      case 'direct': return '💬 Direct';
-      case 'fallback': return '⚠️ Fallback';
-      default: return '';
+      case 'rag':
+        return '📚 RAG';
+      case 'web':
+        return '🌐 Web';
+      case 'direct':
+        return '💬 Direct';
+      case 'fallback':
+        return '⚠️ Fallback';
+      default:
+        return '';
     }
   }
 
@@ -100,37 +127,52 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.toolsEnabled = tools;
   }
 
+  /** Load messages from a previous session. */
   loadSession(sessionId: string): void {
     this.sessionId = sessionId;
     this.messages = [];
-    this.cdr.detectChanges();
 
-    // Load old messages from this session
     this.apiService.getSessionMessages(sessionId).subscribe({
       next: (msgs) => {
-        this.messages = msgs.map((m) => ({
-          role: m.role === 'human' ? 'user' as const : 'assistant' as const,
-          content: m.content,
-          timestamp: new Date(),
-        }));
-        // Force full change detection cycle for [innerHTML] bindings
-        this.cdr.markForCheck();
+        this.messages = msgs.map((m) => {
+          const role = m.role === 'human' ? 'user' : 'assistant';
+          const msg: ChatMessage = {
+            role,
+            content: m.content,
+            timestamp: new Date(),
+          };
+          if (role === 'assistant') {
+            msg.renderedHtml = this.parseMarkdown(m.content);
+          }
+          return msg;
+        });
         this.cdr.detectChanges();
-        // Scroll after DOM has rendered
-        setTimeout(() => this.scrollToBottom(), 100);
+        this.scrollToBottom();
       },
       error: () => {
-        // If loading fails, just show welcome message
         this.addWelcomeMessage();
-        this.cdr.detectChanges();
       },
     });
   }
 
+  // ── Private helpers ──────────────────────────────────────────
+
+  /** Parses markdown string and returns SafeHtml. */
+  private parseMarkdown(text: string): any {
+    if (!text) return '';
+    const html = marked.parse(text) as string;
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  /**
+   * Stream tokens from the server, appending each to the assistant
+   * message in real-time. Markdown is re-parsed on each token.
+   */
   private sendStreaming(req: AskRequest): void {
     const assistantMsg: ChatMessage = {
       role: 'assistant',
       content: '',
+      renderedHtml: '',
       timestamp: new Date(),
       isStreaming: true,
     };
@@ -141,6 +183,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       next: (event) => {
         if (event.type === 'token' && event.token) {
           assistantMsg.content += event.token;
+          // Pre-render HTML for bulletproof Angular binding
+          assistantMsg.renderedHtml = this.parseMarkdown(assistantMsg.content);
           this.cdr.detectChanges();
           this.scrollToBottom();
         } else if (event.type === 'meta') {
@@ -154,33 +198,16 @@ export class ChatComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        // Replace the message object to force Angular to re-render with markdown
-        const idx = this.messages.indexOf(assistantMsg);
-        if (idx !== -1) {
-          this.messages[idx] = {
-            ...assistantMsg,
-            content: assistantMsg.content + '\n\n⚠️ Error: Could not reach the server.',
-            isStreaming: false,
-            timestamp: new Date(),
-          };
-        }
+        assistantMsg.content += '\n\n⚠️ Error: Could not reach the server.';
+        assistantMsg.renderedHtml = this.parseMarkdown(assistantMsg.content);
+        assistantMsg.isStreaming = false;
         this.isLoading = false;
-        this.messages = [...this.messages];
         this.cdr.detectChanges();
         console.error('Stream error:', err);
       },
       complete: () => {
-        // Replace the message object to force Angular to re-render with markdown
-        const idx = this.messages.indexOf(assistantMsg);
-        if (idx !== -1) {
-          this.messages[idx] = {
-            ...assistantMsg,
-            isStreaming: false,
-            timestamp: new Date(),
-          };
-        }
+        assistantMsg.isStreaming = false;
         this.isLoading = false;
-        this.messages = [...this.messages];
         this.cdr.detectChanges();
         this.scrollToBottom();
       },
@@ -197,6 +224,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.messages.push({
           role: 'assistant',
           content: res.answer,
+          renderedHtml: this.parseMarkdown(res.answer),
           citations: res.citations,
           source_type: res.source_type,
           timestamp: new Date(),
@@ -205,9 +233,11 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.scrollToBottom();
       },
       error: (err) => {
+        const errorContent = '⚠️ Error: Could not reach the server.';
         this.messages.push({
           role: 'assistant',
-          content: '⚠️ Error: Could not reach the server.',
+          content: errorContent,
+          renderedHtml: this.parseMarkdown(errorContent),
           timestamp: new Date(),
         });
         this.isLoading = false;
@@ -217,10 +247,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   private addWelcomeMessage(): void {
+    const content = "Hello! I'm the **QA RAG Agent**. Ask me anything about your indexed documents, or enable tools for web search capabilities.";
     this.messages.push({
       role: 'assistant',
-      content:
-        'Hello! I\'m the **QA RAG Agent**. Ask me anything about your indexed documents, or enable tools for web search capabilities.',
+      content,
+      renderedHtml: this.parseMarkdown(content),
       timestamp: new Date(),
     });
   }

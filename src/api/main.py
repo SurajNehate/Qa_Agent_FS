@@ -264,7 +264,8 @@ async def ask_stream(req: AskRequest):
         full_answer = []
         for token in token_stream:
             full_answer.append(token)
-            yield f"data: {token}\n\n"
+            # JSON encode the token so newlines are preserved across SSE
+            yield f"data: {json.dumps(token)}\n\n"
 
         # Persist messages to session
         try:
