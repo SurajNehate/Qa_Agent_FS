@@ -1,8 +1,17 @@
 export interface AskRequest {
   question: string;
   session_id?: string;
+  model?: string;
   rag_enabled: boolean;
   tools_enabled: boolean;
+}
+
+export interface ModelInfo {
+  model: string;
+  provider: string;
+  available: boolean;
+  warning: string | null;
+  is_default: boolean;
 }
 
 export interface Citation {

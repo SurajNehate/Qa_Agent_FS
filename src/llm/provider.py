@@ -15,10 +15,10 @@ class LLMConfig(BaseModel):
     """Configuration for LLM provider and model."""
 
     provider: Literal["openai", "groq", "ollama"] = Field(
-        default_factory=lambda: os.getenv("LLM_PROVIDER", "openai")
+        default_factory=lambda: os.getenv("LLM_PROVIDER", "groq")
     )
     model: str = Field(
-        default_factory=lambda: os.getenv("LLM_MODEL", "gpt-4.1-nano")
+        default_factory=lambda: os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
     )
     temperature: float = Field(
         default_factory=lambda: float(os.getenv("LLM_TEMPERATURE", "0.2"))
@@ -27,9 +27,9 @@ class LLMConfig(BaseModel):
 
 # Default model suggestions per provider (for UI dropdowns)
 PROVIDER_MODELS: dict[str, list[str]] = {
-    "openai": ["gpt-4.1-nano", "gpt-4.1", "gpt-4-turbo", "gpt-5-nano"],
-    "groq": ["llama-3.1-8b-instant", "llama-3.1-70b-versatile", "mixtral-8x7b-32768"],
-    "ollama": ["llama3.2", "llama3.1", "mistral", "phi3"],
+    "openai": ["gpt-5-nano", "gpt-4.1-nano"],
+    "groq": ["openai/gpt-oss-120b", "llama-3.1-8b-instant"],
+    "ollama": ["llama3.1:8b", "mistral:7b", "phi3.5:3.8b"],
 }
 
 

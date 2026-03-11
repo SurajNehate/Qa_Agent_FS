@@ -53,7 +53,7 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 _store = None
-_llm = None
+_llm_cache: dict[str, object] = {}
 
 
 def _get_store():
@@ -64,18 +64,41 @@ def _get_store():
     return _store
 
 
-def _get_llm():
-    global _llm
-    if _llm is None:
-        from src.llm.provider import LLMConfig, get_llm
-        try:
-            _llm = get_llm(LLMConfig())
-        except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"LLM initialization failed: {e}",
-            ) from e
-    return _llm
+def _get_llm_for_model(model_name: str | None = None):
+    """Get or create an LLM instance, optionally for a specific model."""
+    from src.llm.provider import LLMConfig, get_llm, PROVIDER_MODELS
+
+    if not model_name:
+        # Use default from env
+        config = LLMConfig()
+        model_name = config.model
+    else:
+        config = None
+
+    # Return cached LLM if exists
+    if model_name in _llm_cache:
+        return _llm_cache[model_name]
+
+    # Determine provider from PROVIDER_MODELS
+    if config is None:
+        provider = None
+        for prov, models in PROVIDER_MODELS.items():
+            if model_name in models:
+                provider = prov
+                break
+        if provider is None:
+            provider = "openai"  # default fallback
+        config = LLMConfig(provider=provider, model=model_name)
+
+    try:
+        llm = get_llm(config)
+        _llm_cache[model_name] = llm
+        return llm
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"LLM initialization failed for {model_name}: {e}",
+        ) from e
 
 
 # ---------------------------------------------------------------------------
@@ -102,6 +125,38 @@ async def health():
     )
 
 
+@app.get("/api/models", tags=["System"])
+async def list_models():
+    """List available LLM models grouped by provider."""
+    import os
+    from src.llm.provider import PROVIDER_MODELS, LLMConfig
+
+    default_model = LLMConfig().model
+    ollama_available = bool(os.getenv("OLLAMA_BASE_URL"))
+    groq_available = bool(os.getenv("GROQ_API_KEY"))
+
+    result = []
+    for provider, models in PROVIDER_MODELS.items():
+        available = True
+        warning = None
+        if provider == "ollama" and not ollama_available:
+            available = False
+            warning = "Ollama requires local setup — not available in cloud deployment"
+        elif provider == "groq" and not groq_available:
+            available = False
+            warning = "GROQ_API_KEY not configured"
+
+        for model in models:
+            result.append({
+                "model": model,
+                "provider": provider,
+                "available": available,
+                "warning": warning,
+                "is_default": model == default_model,
+            })
+    return result
+
+
 @app.post("/api/ask", response_model=AskResponse, tags=["Agent"])
 async def ask(req: AskRequest):
     """Ask the agent a question. Returns a complete answer with citations."""
@@ -112,7 +167,7 @@ async def ask(req: AskRequest):
     from src.observability.tracing import get_callbacks
 
     store = _get_store()
-    llm = _get_llm()
+    llm = _get_llm_for_model(req.model)
 
     # Auto-create session if not provided
     session_id = req.session_id or str(uuid.uuid4())
@@ -181,7 +236,7 @@ async def ask_stream(req: AskRequest):
     from src.observability.tracing import get_callbacks
 
     store = _get_store()
-    llm = _get_llm()
+    llm = _get_llm_for_model(req.model)
 
     # Auto-create session if not provided
     session_id = req.session_id or str(uuid.uuid4())

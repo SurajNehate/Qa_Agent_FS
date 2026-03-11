@@ -15,6 +15,7 @@ class AskRequest(BaseModel):
 
     question: str = Field(..., min_length=1, description="The question to ask the agent")
     session_id: str | None = Field(None, description="Session ID for conversation memory")
+    model: str | None = Field(None, description="LLM model to use (e.g. gpt-5-nano, llama-3.1-8b-instant)")
     rag_enabled: bool = Field(True, description="Enable RAG retrieval from indexed documents")
     tools_enabled: bool = Field(False, description="Enable agent tools (web search, etc.)")
 

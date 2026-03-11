@@ -11,6 +11,7 @@ import { ChatComponent } from './features/chat/chat.component';
       <app-sidebar
         (sessionSelected)="onSessionSelected($event)"
         (settingsChanged)="onSettingsChanged($event)"
+        (modelChanged)="onModelChanged($event)"
         (newChat)="onNewChat()"
       ></app-sidebar>
       <main class="app-main">
@@ -49,6 +50,10 @@ export class AppComponent {
   onNewChat(): void {
     this.chatRef.sessionId = undefined;
     this.chatRef.clearChat();
+  }
+
+  onModelChanged(model: string): void {
+    this.chatRef.selectedModel = model;
   }
 
   onSessionCreated(): void {

@@ -7,6 +7,7 @@ import {
   HealthResponse,
   IngestResponse,
   SessionResponse,
+  ModelInfo,
 } from '../models/api.models';
 import { environment } from '../../../environments/environment';
 
@@ -18,6 +19,10 @@ export class ApiService {
 
   health(): Observable<HealthResponse> {
     return this.http.get<HealthResponse>(`${this.baseUrl}/api/health`);
+  }
+
+  getModels(): Observable<ModelInfo[]> {
+    return this.http.get<ModelInfo[]>(`${this.baseUrl}/api/models`);
   }
 
   ask(req: AskRequest): Observable<AskResponse> {

@@ -21,6 +21,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   toolsEnabled = false;
   sessionId: string | undefined;
   useStreaming = true;
+  selectedModel: string | undefined;
 
   @Output() sessionCreated = new EventEmitter<void>();
 
@@ -61,6 +62,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       rag_enabled: this.ragEnabled,
       tools_enabled: this.toolsEnabled,
       session_id: this.sessionId,
+      model: this.selectedModel,
     };
 
     if (this.useStreaming) {

@@ -42,11 +42,16 @@
     <!-- LLM Model -->
     <div class="section">
       <h3>🤖 Model</h3>
-      <select [(ngModel)]="selectedModel" class="model-select" id="model-select">
-        @for (model of modelOptions; track model.value) {
-          <option [value]="model.value">{{ model.label }}</option>
+      <select [(ngModel)]="selectedModel" (ngModelChange)="onModelChange()" class="model-select" id="model-select">
+        @for (m of models; track m.model) {
+          <option [value]="m.model" [disabled]="!m.available">
+            {{ getModelLabel(m) }}{{ !m.available ? ' ⚠️' : '' }}{{ m.is_default ? ' ★' : '' }}
+          </option>
         }
       </select>
+      @if (models.length === 0) {
+        <p class="muted">Loading models...</p>
+      }
     </div>
 
     <!-- File Upload -->

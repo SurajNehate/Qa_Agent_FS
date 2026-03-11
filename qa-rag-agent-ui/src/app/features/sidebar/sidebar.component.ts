@@ -2,7 +2,7 @@ import { Component, OnInit, Output, EventEmitter, ChangeDetectorRef } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
-import { SessionResponse, HealthResponse } from '../../core/models/api.models';
+import { SessionResponse, HealthResponse, ModelInfo } from '../../core/models/api.models';
 
 @Component({
   selector: 'app-sidebar',
@@ -14,6 +14,7 @@ import { SessionResponse, HealthResponse } from '../../core/models/api.models';
 export class SidebarComponent implements OnInit {
   @Output() sessionSelected = new EventEmitter<string>();
   @Output() settingsChanged = new EventEmitter<{ rag: boolean; tools: boolean }>();
+  @Output() modelChanged = new EventEmitter<string>();
   @Output() newChat = new EventEmitter<void>();
 
   sessions: SessionResponse[] = [];
@@ -25,17 +26,9 @@ export class SidebarComponent implements OnInit {
   isUploading = false;
   isCollapsed = false;
 
-  // LLM Model options
-  selectedModel = 'gpt-4o-mini';
-  modelOptions = [
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini (OpenAI)' },
-    { value: 'gpt-4o', label: 'GPT-4o (OpenAI)' },
-    { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini (OpenAI)' },
-    { value: 'gpt-4.1', label: 'GPT-4.1 (OpenAI)' },
-    { value: 'llama3-8b-8192', label: 'Llama 3 8B (Groq)' },
-    { value: 'llama3-70b-8192', label: 'Llama 3 70B (Groq)' },
-    { value: 'llama3.2', label: 'Llama 3.2 (Ollama)' },
-  ];
+  // LLM Model — fetched from /api/models
+  selectedModel = '';
+  models: ModelInfo[] = [];
 
   constructor(
     private apiService: ApiService,
@@ -45,6 +38,7 @@ export class SidebarComponent implements OnInit {
   ngOnInit(): void {
     this.loadHealth();
     this.loadSessions();
+    this.loadModels();
   }
 
   loadHealth(): void {
@@ -55,6 +49,25 @@ export class SidebarComponent implements OnInit {
       },
       error: () => {
         this.health = null;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  loadModels(): void {
+    this.apiService.getModels().subscribe({
+      next: (models) => {
+        this.models = models;
+        const defaultModel = models.find((m) => m.is_default);
+        if (defaultModel) {
+          this.selectedModel = defaultModel.model;
+        } else if (models.length > 0) {
+          this.selectedModel = models[0].model;
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.models = [];
         this.cdr.detectChanges();
       },
     });
@@ -96,6 +109,15 @@ export class SidebarComponent implements OnInit {
       rag: this.ragEnabled,
       tools: this.toolsEnabled,
     });
+  }
+
+  onModelChange(): void {
+    this.modelChanged.emit(this.selectedModel);
+  }
+
+  getModelLabel(m: ModelInfo): string {
+    const provLabel = m.provider.charAt(0).toUpperCase() + m.provider.slice(1);
+    return `${m.model} (${provLabel})`;
   }
 
   onFileSelected(event: Event): void {

@@ -68,9 +68,9 @@ def _init_state():
     if "indexed_files" not in st.session_state:
         st.session_state.indexed_files = []
     if "llm_provider" not in st.session_state:
-        st.session_state.llm_provider = os.getenv("LLM_PROVIDER", "openai")
+        st.session_state.llm_provider = os.getenv("LLM_PROVIDER", "groq")
     if "llm_model" not in st.session_state:
-        st.session_state.llm_model = os.getenv("LLM_MODEL", "gpt-4o-mini")
+        st.session_state.llm_model = os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
     if "llm" not in st.session_state:
         st.session_state.llm = None
     if "last_citations" not in st.session_state:
