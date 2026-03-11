@@ -2,6 +2,9 @@ import modal
 import os
 import shutil
 
+# use this command to clear the modal db in case of embedding model change
+# modal run clear_modal_db.py
+
 app = modal.App("qa-rag-agent-cleanup")
 volume = modal.Volume.from_name("qa-rag-agent-data", create_if_missing=True)
 
