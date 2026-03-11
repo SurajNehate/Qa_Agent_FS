@@ -103,6 +103,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   loadSession(sessionId: string): void {
     this.sessionId = sessionId;
     this.messages = [];
+    this.cdr.detectChanges();
 
     // Load old messages from this session
     this.apiService.getSessionMessages(sessionId).subscribe({
@@ -112,8 +113,11 @@ export class ChatComponent implements OnInit, OnDestroy {
           content: m.content,
           timestamp: new Date(),
         }));
+        // Force full change detection cycle for [innerHTML] bindings
+        this.cdr.markForCheck();
         this.cdr.detectChanges();
-        this.scrollToBottom();
+        // Scroll after DOM has rendered
+        setTimeout(() => this.scrollToBottom(), 100);
       },
       error: () => {
         // If loading fails, just show welcome message
