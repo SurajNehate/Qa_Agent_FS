@@ -19,7 +19,6 @@ data/chroma_db/
 # Prompts
 docs/Prompts/
 
-# UI
-qa-rag-agent-ui/node_modules/
-qa-rag-agent-ui/dist/
-qa-rag-agent-ui/.angular/
+# Memory
+data/memory.db
+
