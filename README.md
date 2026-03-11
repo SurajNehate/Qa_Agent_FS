@@ -72,7 +72,7 @@ uv run uvicorn src.api.main:app --reload --port 8000
 ```bash
 cd qa-rag-agent/qa-rag-agent-ui
 npm install
-ng serve
+npx ng serve --proxy-config proxy.conf.json
 ```
 *UI is accessible at `http://localhost:4200`*
 
