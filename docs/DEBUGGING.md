@@ -70,7 +70,7 @@ flowchart TD
 ```powershell
 # PowerShell
 $env:LANGGRAPH_DEBUG="true"
-streamlit run src/ui/app.py
+uvicorn src.api.main:app --reload
 ```
 
 This will:
@@ -85,7 +85,7 @@ Enable both Langfuse and LangSmith for maximum visibility:
 ```powershell
 $env:LANGFUSE_ENABLED="true"
 $env:LANGSMITH_ENABLED="true"
-streamlit run src/ui/app.py
+uvicorn src.api.main:app --reload
 ```
 
 Check dashboards:

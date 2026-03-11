@@ -45,14 +45,14 @@ flowchart LR
     N --> T
     I --> L
     T --> L
-    L --> U
-    U --> M
+    L --> M
     M --> O
     O --> EV
     EV --> TD
     TD --> CK
     CK --> AP
-    AP --> X
+    AP --> U
+    U --> X
 ```
 
 ---
@@ -167,16 +167,18 @@ It's the standard choice for learning because it removes the API key barrier.
 
 ---
 
-### Step 9 — [app.py](file:///c:/AIML/POC/qa-rag-agent/src/ui/app.py) (382 lines)
+### Step 9 — [app/features/chat/chat.component.ts](file:///c:/AIML/POC/qa-rag-agent/qa-rag-agent-ui/src/app/features/chat/chat.component.ts)
 
-**What you'll learn:** How everything comes together in a real UI.
+**What you'll learn:** How everything comes together in a real, decoupled UI.
 
-This is the largest file. Read it last because it calls everything else.
+The UI is intentionally separated into an Angular application to demonstrate production readiness (most enterprise AI apps are not monolithic Streamlit scripts).
 
 **Key things to notice:**
-- Session management uses `st.session_state` for UI state + SQLite for persistence.
-- `st.write_stream(token_generator)` is the streaming magic — one line.
-- The sidebar has sections for: Sessions, Upload, Model Settings, Observability, Memory.
+- `StreamService` handles consuming the SSE tokens.
+- We JSON-decode incoming tokens to protect markdown newlines across the network boundary before rendering them.
+
+**Question to answer:** *Why must we JSON-encode tokens over SSE instead of sending raw strings?*
+> Answer: Because tokens featuring markdown bullet points or headers contain raw `\n` characters. If sent as raw strings, the browser's SSE parser would consume those newlines as stream delimiters, destroying the markdown structure.
 
 ---
 

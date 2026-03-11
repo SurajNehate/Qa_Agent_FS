@@ -46,7 +46,7 @@ flowchart LR
 | **V7** | `QA_RAG_AGENT_V7_PROMPT.md` | SqliteSaver, time-travel debugging, state replay | Implemented |
 | **V8** | `QA_RAG_AGENT_V8_PROMPT.md` | FastAPI contract parity, API hardening, deploy readiness | Implemented |
 | **V9** | `QA_RAG_AGENT_V9_PROMPT.md` | Modal.com deployment, persistent volumes, secrets | Implemented |
-| **V10** | `QA_RAG_AGENT_V10_PROMPT.md` | Angular frontend, Netlify deployment, SSE streaming UI | Implemented |
+| **V10** | `QA_RAG_AGENT_V10_PROMPT.md` | Angular frontend, Netlify deployment, Resilient SSE streaming | Implemented |
 
 ## What Each Version Teaches
 

@@ -63,7 +63,44 @@ Defaulting to `False` means:
 
 ---
 
-## 2. Retrieval-Augmented Generation — The Full Pipeline
+## 2. Resilient Token Streaming (JSON over SSE)
+
+When an LLM generates a bulleted list or a Markdown header, it outputs raw newline `\n` characters. 
+In a standard Server-Sent Events (SSE) `text/event-stream`, data frames are delimited by `\n\n`. 
+
+If the backend yields plain string tokens (e.g., `yield f"data: {token}\n\n"`), frontend SSE decoders (like JavaScript's `split('\n')` handlers) often accidentally consume the LLM's newlines as frame delimiters. This results in the frontend receiving one massive paragraph completely stripped of its markdown structure (`## Header - item1 - item2`).
+
+### The JSON-Encapsulation Fix:
+To guarantee perfect Markdown rendering across the network boundary, we explicitly JSON-encode the string payload on the backend:
+```python
+# Backend (main.py)
+yield f"data: {json.dumps(token)}\n\n"
+```
+
+The frontend then safely decodes it, ensuring the newline survives the transport layer untouched:
+```typescript
+// Frontend (stream.service.ts)
+const parsedToken = JSON.parse(data);
+observer.next({ type: 'token', token: parsedToken });
+```
+
+---
+
+## 3. Offline Degradation for Embeddings
+
+Many corporate environments use proxies that intercept SSL certificates. When initializing `HuggingFaceEmbeddings`, the library performs a network "ping" to check for model updates. Behind a corporate proxy, this throws a fatal `SSL: CERTIFICATE_VERIFY_FAILED` verification error, crashing the entire FastAPI backend.
+
+### The Try/Except `HF_HUB_OFFLINE` Fallback:
+In `src/rag/embeddings.py`, we implement a graceful degradation pattern:
+1. Attempt normal initialization (succeeds locally and in cloud).
+2. Catch SSL verification errors specifically.
+3. Automatically inject `os.environ["HF_HUB_OFFLINE"] = "1"` to force HuggingFace to rely exclusively on the downloaded `.cache` weights.
+
+This pattern ensures the application remains highly available regardless of network constraints.
+
+---
+
+## 4. Retrieval-Augmented Generation — The Full Pipeline
 
 ```mermaid
 flowchart LR

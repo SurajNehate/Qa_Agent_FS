@@ -83,9 +83,9 @@ sequenceDiagram
 ```mermaid
 flowchart TB
     subgraph "Presentation Layer"
-        UI[src/ui/app.py\nStreamlit UI\n315 lines]
-        API[src/api/main.py\nFastAPI REST\n210 lines]
-        SCH[src/api/schemas.py\nPydantic models\n49 lines]
+        UI[Angular 17 UI\nqa-rag-agent-ui/\nComponents & Services]
+        API[src/api/main.py\nFastAPI REST Endpoints\n~400 lines]
+        SCH[src/api/schemas.py\nPydantic request models\n49 lines]
     end
 
     subgraph "Application Layer"
@@ -147,8 +147,8 @@ flowchart TB
 
 | Layer | Module | Files | Responsibility | Key Pattern |
 |-------|--------|-------|----------------|-------------|
-| **Presentation** | UI | `src/ui/app.py` | User interaction, streaming display, session management | Streamlit session state |
-| **Presentation** | API | `src/api/main.py`, `schemas.py` | REST endpoints, thin adapter over core | FastAPI + Pydantic models |
+| **Presentation** | Angular UI | `qa-rag-agent-ui/` | Responsive rich UI, markdown rendering, session management | Standalone Components + RxJS Services |
+| **Presentation** | API | `src/api/main.py`, `schemas.py` | REST endpoints, streaming Server-Sent Events (SSE) adapter over core | FastAPI + Pydantic models (SSE payloads are JSON-encoded to protect markdown line breaks) |
 | **Application** | Core | `graph.py`, `nodes.py`, `state.py`, `prompts.py`, `checkpointer.py` | Graph routing, state orchestration, prompt templates, checkpoint factory | StateGraph + conditional edges |
 | **Domain** | RAG | `ingestion.py`, `retriever.py`, `embeddings.py` | Document indexing and vector retrieval | Loader dispatch + PersistentClient |
 | **Domain** | Tools | `web_search.py`, `definitions.py` | External capability integration, ToolNode definitions | Graceful degradation + @tool |

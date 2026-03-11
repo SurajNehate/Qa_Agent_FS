@@ -4,6 +4,19 @@ All notable changes to this project are documented here.
 
 ---
 
+## Post-V10 Polish (2026-03-11)
+
+### Added ✅
+
+- `src/api/models` endpoint for dynamic model selection across providers (OpenAI, Groq, Ollama).
+- Offline fallback for HuggingFace embeddings (`HF_HUB_OFFLINE`) in corporate proxy environments.
+
+### Fixed 🐛
+
+- JSON-encoded SSE payloads for robust Markdown streaming ensuring newlines are preserved across the browser parsing boundary.
+
+---
+
 ## V9 — Modal.com Cloud Deployment (2026-03-10)
 
 ### Added ✅

@@ -19,7 +19,8 @@ C4Context
 
     Person(user, "User", "Asks questions about documents")
 
-    System(agent, "QA RAG Agent", "LangGraph-based Q&A system with RAG, web search, and persistent memory")
+    System(ui, "Angular 17 Browser Client", "Rich UI with session management and markdown streaming")
+    System(agent, "QA RAG Agent FastAPI", "LangGraph-based Q&A REST backend with RAG, web search, and persistent memory")
 
     System_Ext(chroma, "ChromaDB", "Persistent vector store for document embeddings")
     System_Ext(tavily, "Tavily API", "Web search for real-time information")
@@ -27,7 +28,8 @@ C4Context
     System_Ext(langfuse, "Langfuse", "Production tracing and cost monitoring")
     System_Ext(langsmith, "LangSmith", "Development tracing and evaluation")
 
-    Rel(user, agent, "Asks questions, uploads documents")
+    Rel(user, ui, "Interacts with chat interface")
+    Rel(ui, agent, "HTTP/SSE requests (Ask, Upload, Sessions)")
     Rel(agent, chroma, "Stores and retrieves document embeddings")
     Rel(agent, tavily, "Searches web when RAG has no results")
     Rel(agent, llm, "Generates answers via streaming API")

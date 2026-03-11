@@ -7,9 +7,10 @@ A learning-friendly Q&A assistant built with LangGraph, LangChain, ChromaDB, and
 - RAG-based answers from indexed documents
 - Optional web search grounding (Tavily)
 - Explicit fallback response path
-- Token streaming in UI
+- Decoupled modern frontend (Angular 17+) and backend (FastAPI)
+- Token streaming across UI and API limits with SSE JSON encoding
 - Persistent chat memory (SQLite)
-- Multi-provider LLM support (OpenAI, Groq, Ollama)
+- Multi-provider LLM factory (OpenAI, Groq, Ollama)
 - Dual observability (Langfuse + LangSmith)
 - LangGraph debug mode with graph PNG export
 
@@ -38,24 +39,42 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    UI[Streamlit UI] --> CORE[Core Graph and Nodes]
-    CORE --> RAG[RAG Layer]
-    CORE --> TOOLS[Tools Layer]
-    CORE --> LLM[LLM Provider]
-    UI --> MEM[Memory Layer]
-    CORE --> OBS[Observability]
+    subgraph Frontend
+        UI[Angular 17 UI\nqa-rag-agent-ui/]
+    end
+    
+    subgraph Backend
+        API[FastAPI\nsrc/api/main.py]
+        CORE[LangGraph Core]
+        RAG[ChromaDB RAG]
+        LLM[Dynamic LLM Provider Factory]
+    end
+
+    UI -- HTTP/SSE --> API
+    API --> CORE
+    CORE <--> RAG
+    CORE <--> LLM
 ```
 
 ## Quick Start
 
+**1. Start the FastAPI Backend:**
 ```bash
 cd qa-rag-agent
 cp .env.example .env
+# Edit .env and add your LLM API keys
 uv sync
-uv run streamlit run src/ui/app.py
+uv run uvicorn src.api.main:app --reload --port 8000
 ```
+*API is accessible at `http://localhost:8000/docs`*
 
-Open `http://localhost:8501`.
+**2. Start the Angular UI (in a new terminal):**
+```bash
+cd qa-rag-agent/qa-rag-agent-ui
+npm install
+ng serve
+```
+*UI is accessible at `http://localhost:4200`*
 
 ## LangGraph Dev
 
@@ -76,8 +95,9 @@ Open `http://localhost:8000/docs` for the Swagger UI.
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/health` | GET | Service status + feature flags |
+| `/api/models` | GET | Lists available LLM models & providers dynamically |
 | `/api/ask` | POST | Ask a question, get answer + citations |
-| `/api/ask/stream` | POST | Streaming SSE answer |
+| `/api/ask/stream` | POST | Streaming Server-Sent Events (SSE) answers |
 | `/api/ingest` | POST | Upload documents to vector store |
 | `/api/sessions` | GET | List conversation sessions |
 | `/api/sessions/{id}` | DELETE | Delete a session |
