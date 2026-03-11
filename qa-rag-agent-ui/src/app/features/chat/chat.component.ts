@@ -5,11 +5,12 @@ import { Subscription } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { StreamService } from '../../core/services/stream.service';
 import { ChatMessage, AskRequest, Citation } from '../../core/models/api.models';
+import { MarkdownPipe } from '../../shared/pipes/markdown.pipe';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MarkdownPipe],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
 })

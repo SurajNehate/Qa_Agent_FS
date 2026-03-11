@@ -11,7 +11,11 @@
           {{ msg.role === 'user' ? '👤' : '🤖' }}
         </div>
         <div class="message-body">
-          <div class="message-content">{{ msg.content }}</div>
+          @if (msg.role === 'user') {
+            <div class="message-content">{{ msg.content }}</div>
+          } @else {
+            <div class="message-content markdown-body" [innerHTML]="msg.content | markdown"></div>
+          }
 
           @if (msg.isStreaming) {
             <span class="streaming-cursor">▊</span>
@@ -27,7 +31,9 @@
             <div class="citations">
               <span class="citations-label">📎 Sources:</span>
               @for (cite of msg.citations; track cite.source) {
-                <span class="citation-chip">{{ cite.source }}</span>
+                <span class="citation-chip" [title]="cite.snippet || ''">
+                  {{ cite.source }}{{ cite.page && cite.page !== 'N/A' ? ' · p.' + cite.page : '' }}
+                </span>
               }
             </div>
           }

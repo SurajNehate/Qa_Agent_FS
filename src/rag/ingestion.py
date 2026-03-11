@@ -57,11 +57,12 @@ def _get_splitter() -> RecursiveCharacterTextSplitter:
     )
 
 
-def load_and_chunk(file_path: str) -> list[Document]:
+def load_and_chunk(file_path: str, original_name: str | None = None) -> list[Document]:
     """Load a single file and split it into chunks.
 
     Args:
         file_path: Path to the document file.
+        original_name: Original filename (used when file_path is a temp path).
 
     Returns:
         List of chunked Document objects with metadata including 'source'.
@@ -69,10 +70,15 @@ def load_and_chunk(file_path: str) -> list[Document]:
     loader = _get_loader(file_path)
     documents = loader.load()
 
-    # Ensure every document has a source in metadata
+    # Use original filename if provided, otherwise basename of file_path
+    display_name = original_name or os.path.basename(file_path)
+
+    # Ensure every document has a readable source in metadata
     for doc in documents:
-        if "source" not in doc.metadata:
-            doc.metadata["source"] = os.path.basename(file_path)
+        doc.metadata["source"] = display_name
+        # Ensure page number is a string for display
+        if "page" in doc.metadata:
+            doc.metadata["page"] = str(int(doc.metadata["page"]) + 1)  # 0-indexed → 1-indexed
 
     splitter = _get_splitter()
     chunks = splitter.split_documents(documents)
@@ -80,28 +86,31 @@ def load_and_chunk(file_path: str) -> list[Document]:
     # Propagate source to all chunks
     for chunk in chunks:
         if "source" not in chunk.metadata:
-            chunk.metadata["source"] = os.path.basename(file_path)
+            chunk.metadata["source"] = display_name
 
     return chunks
 
 
-def ingest_files(file_paths: list[str], store: Chroma) -> dict:
+def ingest_files(
+    file_paths: list[str],
+    store: Chroma,
+    original_names: list[str] | None = None,
+) -> dict:
     """Load, chunk, and index multiple files into the vector store.
 
     Args:
         file_paths: List of file paths to ingest.
         store: A Chroma vector store instance.
+        original_names: Optional list of original filenames (same order as file_paths).
 
     Returns:
         Dict with 'files' count and 'chunks' count.
-
-    Raises:
-        ValueError: If any file has an unsupported extension.
     """
     all_chunks: list[Document] = []
+    names = original_names or [None] * len(file_paths)
 
-    for path in file_paths:
-        chunks = load_and_chunk(path)
+    for path, name in zip(file_paths, names):
+        chunks = load_and_chunk(path, original_name=name)
         all_chunks.extend(chunks)
 
     if all_chunks:
@@ -110,15 +119,20 @@ def ingest_files(file_paths: list[str], store: Chroma) -> dict:
     return {"files": len(file_paths), "chunks": len(all_chunks)}
 
 
-def reindex(file_paths: list[str], store: Chroma) -> dict:
+def reindex(
+    file_paths: list[str],
+    store: Chroma,
+    original_names: list[str] | None = None,
+) -> dict:
     """Clear the collection and re-ingest files from scratch.
 
     Args:
         file_paths: List of file paths to ingest.
         store: A Chroma vector store instance.
+        original_names: Optional list of original filenames.
 
     Returns:
         Dict with 'files' count and 'chunks' count.
     """
     clear_collection(store)
-    return ingest_files(file_paths, store)
+    return ingest_files(file_paths, store, original_names=original_names)

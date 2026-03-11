@@ -307,6 +307,7 @@ async def ingest(files: list[UploadFile], replace_existing: bool = False):
 
     store = _get_store()
     tmp_paths = []
+    original_names = []
 
     try:
         for f in files:
@@ -316,17 +317,18 @@ async def ingest(files: list[UploadFile], replace_existing: bool = False):
                     status_code=400,
                     detail=f"Unsupported file type: {ext}. Supported: {SUPPORTED_EXTENSIONS}",
                 )
-            # Save to temp file
+            # Save to temp file, track original name
             suffix = ext
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
                 content = await f.read()
                 tmp.write(content)
                 tmp_paths.append(tmp.name)
+                original_names.append(f.filename or os.path.basename(tmp.name))
 
         if replace_existing:
-            result = reindex(tmp_paths, store)
+            result = reindex(tmp_paths, store, original_names=original_names)
         else:
-            result = ingest_files(tmp_paths, store)
+            result = ingest_files(tmp_paths, store, original_names=original_names)
 
         return IngestResponse(
             files_processed=result.get("files", 0),

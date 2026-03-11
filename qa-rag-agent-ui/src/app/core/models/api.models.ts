@@ -17,6 +17,7 @@ export interface ModelInfo {
 export interface Citation {
   source: string;
   page?: string;
+  snippet?: string;
   [key: string]: unknown;
 }
 
