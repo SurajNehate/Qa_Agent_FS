@@ -154,15 +154,33 @@ export class ChatComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        assistantMsg.content += '\n\n⚠️ Error: Could not reach the server.';
-        assistantMsg.isStreaming = false;
+        // Replace the message object to force Angular to re-render with markdown
+        const idx = this.messages.indexOf(assistantMsg);
+        if (idx !== -1) {
+          this.messages[idx] = {
+            ...assistantMsg,
+            content: assistantMsg.content + '\n\n⚠️ Error: Could not reach the server.',
+            isStreaming: false,
+            timestamp: new Date(),
+          };
+        }
         this.isLoading = false;
+        this.messages = [...this.messages];
         this.cdr.detectChanges();
         console.error('Stream error:', err);
       },
       complete: () => {
-        assistantMsg.isStreaming = false;
+        // Replace the message object to force Angular to re-render with markdown
+        const idx = this.messages.indexOf(assistantMsg);
+        if (idx !== -1) {
+          this.messages[idx] = {
+            ...assistantMsg,
+            isStreaming: false,
+            timestamp: new Date(),
+          };
+        }
         this.isLoading = false;
+        this.messages = [...this.messages];
         this.cdr.detectChanges();
         this.scrollToBottom();
       },
