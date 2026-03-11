@@ -39,6 +39,10 @@ image = (
     .pip_install_from_requirements("requirements.txt")
     .env({"PYTHONPATH": "/root"})
     .add_local_dir("src", remote_path="/root/src", copy=True)
+    # Pre-cache the embedding model so cold starts are fast
+    .run_commands(
+        "python -c \"from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')\""
+    )
 )
 
 
@@ -51,7 +55,7 @@ image = (
     volumes={"/root/data": volume},
     secrets=[modal.Secret.from_name("qa-rag-agent-secrets")],
     timeout=300,
-    scaledown_window=120,
+    scaledown_window=300,  # Keep warm for 5 min to reduce cold starts
 )
 @modal.concurrent(max_inputs=10)
 @modal.asgi_app()
